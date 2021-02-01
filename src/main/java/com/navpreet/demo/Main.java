@@ -1,8 +1,5 @@
 package com.navpreet.demo;
 
-import java.util.Arrays;
-
-import com.navpreet.demo.hashtable.FirstRecurringCharacter;
 import com.navpreet.demo.linkedlist.LinkedList;
 
 public class Main {
@@ -16,15 +13,11 @@ public class Main {
         ls.prepend(101);
         ls.insert(0, 111);
         ls.insert(ls.size(), 112);
-        ls.insert(4, 113);
-        System.out.println(ls.size());
+        ls.insert(1, 113);
         System.out.println(ls);
-        // ls.remove(0);
-        // ls.remove(5);
-        // System.out.println(ls.remove(Integer.valueOf(1199)));
+        ls.reverse();
         System.out.println(ls);
-
-        for(Integer i : ls) {
+        for (int i : ls) {
             System.out.println(i);
         }
     }

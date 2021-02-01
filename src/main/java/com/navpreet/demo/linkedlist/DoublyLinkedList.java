@@ -3,13 +3,13 @@ package com.navpreet.demo.linkedlist;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class LinkedList<E> implements Iterable<E> {
+public class DoublyLinkedList<E> implements Iterable<E> {
 
     private Node<E> head;
     private Node<E> tail;
     private int length;
 
-    public LinkedList(E item) {
+    public DoublyLinkedList(E item) {
         this.head = new Node<>(item);
         this.tail = this.head;
         this.length++;
@@ -17,14 +17,16 @@ public class LinkedList<E> implements Iterable<E> {
 
     public void append(E item) {
         var newNode = new Node<>(item);
+        newNode.previous = this.tail;
         this.tail.next = newNode;
-        this.tail = this.tail.next;
+        this.tail = newNode;
         this.length++;
     }
 
     public void prepend(E item) {
         var newNode = new Node<>(item);
         newNode.next = this.head;
+        this.head.previous = newNode;
         this.head = newNode;
         this.length++;
     }
@@ -42,10 +44,12 @@ public class LinkedList<E> implements Iterable<E> {
             return;
         }
 
-        var previousNode = findPreviousNode(index);
+        var currentNode = index > size() / 2 ? findNodeFromEnd(index) : findNodeFromStart(index);
         var newNode = new Node<>(item);
-        newNode.next = previousNode.next;
-        previousNode.next = newNode;
+        currentNode.previous.next = newNode;
+        newNode.previous = currentNode.previous;
+        currentNode.previous = newNode;
+        newNode.next = currentNode;
         length++;
     }
 
@@ -57,14 +61,16 @@ public class LinkedList<E> implements Iterable<E> {
         if (index == 0) {
             removedItem = this.head.item;
             this.head = this.head.next;
+            this.head.previous = null;
             this.length--;
             return removedItem;
         }
 
-        var previousNode = findPreviousNode(index);
+        var currentNode = index > size() / 2 ? findNodeFromEnd(index) : findNodeFromStart(index);
 
-        removedItem = previousNode.next.item;
-        previousNode.next = previousNode.next.next;
+        removedItem = currentNode.item;
+        currentNode.previous.next = currentNode.next;
+        currentNode.next.previous = currentNode.previous;
         this.length--;
         return removedItem;
     }
@@ -72,60 +78,63 @@ public class LinkedList<E> implements Iterable<E> {
     public boolean remove(E item) {
         if (this.head.item.equals(item)) {
             this.head = this.head.next;
+            this.head.previous = null;
             this.length--;
             return true;
         }
 
-        var previousNode = findPreviousNode(item);
-        if (previousNode == null) {
+        var currentNode = findCurrentNode(item);
+        if (currentNode == null) {
             return false;
         }
-        previousNode.next = previousNode.next.next;
+        currentNode.previous.next = currentNode.next;
+        currentNode.next.previous = currentNode.previous;
         this.length--;
         return true;
     }
 
-    private Node<E> findPreviousNode(E item) {
+    private Node<E> findCurrentNode(E item) {
         var currentNode = this.head.next;
-        var previousNode = this.head;
         while (currentNode != null && !currentNode.item.equals(item)) {
-            previousNode = currentNode;
             currentNode = currentNode.next;
         }
-        return currentNode == null ? null : previousNode;
+        return currentNode;
     }
 
-    private Node<E> findPreviousNode(int index) {
+    private Node<E> findNodeFromStart(int index) {
         var currentNode = this.head.next;
-        var previousNode = this.head;
         var currentIndex = 1;
         while (currentIndex < index) {
-            previousNode = currentNode;
             currentNode = currentNode.next;
             currentIndex++;
         }
-        return previousNode;
+        return currentNode;
+    }
+
+    private Node<E> findNodeFromEnd(int index) {
+        var currentNode = this.tail.previous;
+        var currentIndex = size() - 2;
+        while (currentIndex > index) {
+            currentNode = currentNode.previous;
+            currentIndex--;
+        }
+        return currentNode;
     }
 
     public int size() {
         return this.length;
     }
 
-    public void reverse() {
-        if (this.head.next == null) {
-            return;
-        }
-        Node<E> previousNode = null;
-        Node<E> nextNode = null;
-        var currentNode = this.head;
-        this.tail = currentNode;
+    public String toStringReverse() {
+        var sb = new StringBuilder("[ ");
+        var isFirst = true;
+        var currentNode = this.tail;
         while (currentNode != null) {
-            nextNode = currentNode.next;
-            currentNode.next = previousNode;
-            previousNode = currentNode;
-            currentNode = nextNode;
+            sb.append(isFirst ? "" : ", ").append(currentNode.item);
+            isFirst = false;
+            currentNode = currentNode.previous;
         }
-        this.head = previousNode;
+        return sb.append(" ]").toString();
     }
 
     @Override
@@ -144,15 +153,12 @@ public class LinkedList<E> implements Iterable<E> {
     private static class Node<E> {
         private E item;
         private Node<E> next;
+        private Node<E> previous;
 
         public Node(E item) {
             this.item = item;
             this.next = null;
-        }
-
-        @Override
-        public String toString() {
-            return item + " - " + next;
+            this.previous = null;
         }
     }
 
@@ -160,7 +166,7 @@ public class LinkedList<E> implements Iterable<E> {
     public Iterator<E> iterator() {
         return new Iterator<>() {
 
-            private Node<E> node = LinkedList.this.head;
+            private Node<E> node = DoublyLinkedList.this.head;
 
             @Override
             public boolean hasNext() {
